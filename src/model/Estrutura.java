@@ -1,7 +1,8 @@
 package model;
+
 public class Estrutura {
     private static String[][] vetorDeArrays = new String[26][0];
-
+    
     static {
         for (int i = 0; i < vetorDeArrays.length; i++) {
             vetorDeArrays[i] = new String[0];
@@ -24,7 +25,6 @@ public class Estrutura {
 
         String[] array = vetorDeArrays[indice];
 
-        // Encontrar a posição correta para inserir o nome na ordem alfabética
         int posicaoInsercao = 0;
         while (posicaoInsercao < array.length && nomeFormatado.compareToIgnoreCase(array[posicaoInsercao]) > 0) {
             posicaoInsercao++;
@@ -79,24 +79,32 @@ public class Estrutura {
         return quantidade;
     }
 
-    // Métodos auxiliares...
+    public static void listarNomesPorIndice() {
+        for (int i = 0; i < vetorDeArrays.length; i++) {
+            System.out.println("\nÍndice " + i + ":");
+
+            for (int j = 0; j < vetorDeArrays[i].length; j++) {
+                System.out.println("    " + j + ": " + vetorDeArrays[i][j]);
+            }
+        }
+    }
 
     private static String[] adicionarElemento(String[] array, String elemento, int posicao) {
         String[] novoArray = new String[array.length + 1];
-
+    
         for (int i = 0; i < posicao; i++) {
             novoArray[i] = array[i];
         }
-
+    
         novoArray[posicao] = elemento;
-
+    
         for (int i = posicao + 1; i < novoArray.length; i++) {
             novoArray[i] = array[i - 1];
         }
-
+    
         return novoArray;
     }
-
+    
     private static boolean contemElemento(String[] array, String elemento) {
         for (String e : array) {
             if (e.equals(elemento)) {
@@ -109,12 +117,10 @@ public class Estrutura {
     private static String[] removerElemento(String[] array, int posicao) {
         String[] novoArray = new String[array.length - 1];
 
-        for (int i = 0; i < posicao; i++) {
-            novoArray[i] = array[i];
-        }
-
-        for (int i = posicao + 1; i < array.length; i++) {
-            novoArray[i - 1] = array[i];
+        for (int i = 0, j = 0; i < array.length; i++) {
+            if (i != posicao) {
+                novoArray[j++] = array[i];
+            }
         }
 
         return novoArray;
