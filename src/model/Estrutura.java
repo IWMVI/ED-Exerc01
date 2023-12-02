@@ -1,154 +1,148 @@
 package model;
-
 public class Estrutura {
+    private static String[][] vetorDeArrays = new String[26][0];
 
-    private No[][] indexVetor;
-
-    public Estrutura() {
-        indexVetor = new No[26][];
-        for (int i = 0; i < 26; i++) {
-            indexVetor[i] = new No[10];
+    static {
+        for (int i = 0; i < vetorDeArrays.length; i++) {
+            vetorDeArrays[i] = new String[0];
         }
     }
 
-    public void adicionarNome(String nome) {
-        try {
-            if (nome == null || nome.isEmpty()) {
-                throw new IllegalArgumentException("Nome inválido");
-            }
+    public static int indice(String nome) {
+        char primeiraLetra = obterPrimeiraLetra(nome);
 
-            nome = primeiraLetraMaiuscula(nome);
+        if (!Character.isLetter(primeiraLetra)) {
+            throw new IllegalArgumentException("O nome deve começar com uma letra do alfabeto.");
+        }
 
-            char primeiraLetra = nome.charAt(0);
-            int index = primeiraLetra - 'A';
+        return primeiraLetra - 'a';
+    }
 
-            if (index < 0 || index >= 26) {
-                throw new IllegalArgumentException("A primeira letra não está no alfabeto");
-            }
+    public static void adicionarNome(String nome) {
+        int indice = indice(nome);
+        String nomeFormatado = formatarNome(nome);
 
-            int posicao = encontrarPosicaoVazia(indexVetor[index]);
+        String[] array = vetorDeArrays[indice];
 
-            if (posicao == -1) {
-                No[] novoVetor = new No[indexVetor[index].length * 2];
-                System.arraycopy(indexVetor[index], 0, novoVetor, 0, indexVetor[index].length);
-                indexVetor[index] = novoVetor;
+        // Encontrar a posição correta para inserir o nome na ordem alfabética
+        int posicaoInsercao = 0;
+        while (posicaoInsercao < array.length && nomeFormatado.compareToIgnoreCase(array[posicaoInsercao]) > 0) {
+            posicaoInsercao++;
+        }
 
-                posicao = encontrarPosicaoVazia(indexVetor[index]);
-            }
+        array = adicionarElemento(array, nomeFormatado, posicaoInsercao);
+        vetorDeArrays[indice] = array;
+    }
 
-            indexVetor[index][posicao] = new No(nome);
-        } catch (Exception e) {
-            System.out.println("Erro ao adicionar nome: " + e.getMessage());
+    public static boolean nomeExiste(String nome) {
+        int indice = indice(nome);
+        String nomeFormatado = formatarNome(nome);
+        String[] array = vetorDeArrays[indice];
+        return contemElemento(array, nomeFormatado);
+    }
+
+    public static void excluirNome(String nome) {
+        int indice = indice(nome);
+        String nomeFormatado = formatarNome(nome);
+        String[] array = vetorDeArrays[indice];
+        int posicaoRemocao = encontrarPosicao(array, nomeFormatado);
+
+        if (posicaoRemocao != -1) {
+            array = removerElemento(array, posicaoRemocao);
+            vetorDeArrays[indice] = array;
         }
     }
 
-    public void listarNomes() {
-        for (int i = 0; i < indexVetor.length; i++) {
-            for (int j = 0; j < indexVetor[i].length && indexVetor[i][j] != null; j++) {
-                System.out.println("Nome: " + indexVetor[i][j].nome + ", Índice: " + j);
-            }
+    public static void renomearNome(String nomeAntigo, String nomeNovo) {
+        if (nomeExiste(nomeAntigo)) {
+            excluirNome(nomeAntigo);
+            adicionarNome(nomeNovo);
+        } else {
+            throw new IllegalArgumentException("O nome antigo não existe na estrutura de dados.");
         }
     }
 
-    public void listarNomesPorLetra(char letra) {
-        try {
-            letra = Character.toUpperCase(letra);
-
-            int index = letra - 'A';
-
-            if (index < 0 || index >= 26) {
-                throw new IllegalArgumentException("A letra não está no alfabeto");
+    public static boolean estaVazia() {
+        for (String[] array : vetorDeArrays) {
+            if (array.length > 0) {
+                return false;
             }
-
-            for (int j = 0; j < indexVetor[index].length && indexVetor[index][j] != null; j++) {
-                System.out.println("Nome: " + indexVetor[index][j].nome + ", Índice: " + j);
-            }
-        } catch (Exception e) {
-            System.out.println("Erro ao listar nomes por letra: " + e.getMessage());
         }
+        return true;
     }
 
-    public void removerNome(String nome) {
-        try {
-            if (nome == null || nome.isEmpty()) {
-                throw new IllegalArgumentException("Nome inválido");
-            }
-
-            nome = primeiraLetraMaiuscula(nome);
-
-            char primeiraLetra = nome.charAt(0);
-            int index = primeiraLetra - 'A';
-
-            if (index < 0 || index >= 26) {
-                throw new IllegalArgumentException("A primeira letra não está no alfabeto");
-            }
-
-            for (int j = 0; j < indexVetor[index].length && indexVetor[index][j] != null; j++) {
-                if (indexVetor[index][j].nome.equals(nome)) {
-                    indexVetor[index][j] = null;
-                    compactarVetor(indexVetor[index]);
-                    System.out.println("Nome removido: " + nome);
-                    return;
-                }
-            }
-
-            System.out.println("Nome não encontrado: " + nome);
-        } catch (Exception e) {
-            System.out.println("Erro ao remover nome: " + e.getMessage());
+    public static int quantidadeDeNomes() {
+        int quantidade = 0;
+        for (String[] array : vetorDeArrays) {
+            quantidade += array.length;
         }
+        return quantidade;
     }
 
-    private int encontrarPosicaoVazia(No[] vetor) {
-        for (int i = 0; i < vetor.length; i++) {
-            if (vetor[i] == null) {
+    // Métodos auxiliares...
+
+    private static String[] adicionarElemento(String[] array, String elemento, int posicao) {
+        String[] novoArray = new String[array.length + 1];
+
+        for (int i = 0; i < posicao; i++) {
+            novoArray[i] = array[i];
+        }
+
+        novoArray[posicao] = elemento;
+
+        for (int i = posicao + 1; i < novoArray.length; i++) {
+            novoArray[i] = array[i - 1];
+        }
+
+        return novoArray;
+    }
+
+    private static boolean contemElemento(String[] array, String elemento) {
+        for (String e : array) {
+            if (e.equals(elemento)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static String[] removerElemento(String[] array, int posicao) {
+        String[] novoArray = new String[array.length - 1];
+
+        for (int i = 0; i < posicao; i++) {
+            novoArray[i] = array[i];
+        }
+
+        for (int i = posicao + 1; i < array.length; i++) {
+            novoArray[i - 1] = array[i];
+        }
+
+        return novoArray;
+    }
+
+    private static int encontrarPosicao(String[] array, String elemento) {
+        for (int i = 0; i < array.length; i++) {
+            if (array[i].equals(elemento)) {
                 return i;
             }
         }
         return -1;
     }
 
-    private void compactarVetor(No[] vetor) {
-        int j = 0;
-        for (int i = 0; i < vetor.length; i++) {
-            if (vetor[i] != null) {
-                vetor[j++] = vetor[i];
-            }
-        }
-        for (; j < vetor.length; j++) {
-            vetor[j] = null;
-        }
+    private static char obterPrimeiraLetra(String nome) {
+        String nomeMinusculo = nome.toLowerCase();
+        return nomeMinusculo.charAt(0);
     }
 
-    private String primeiraLetraMaiuscula(String palavra) {
-        if (palavra == null || palavra.isEmpty()) {
-            return palavra;
-        }
-        return Character.toUpperCase(palavra.charAt(0)) + palavra.substring(1).toLowerCase();
-    }
-
-    // Exercício 02
-
-    public int indice(String nome) {
+    private static String formatarNome(String nome) {
         if (nome == null || nome.isEmpty()) {
-            throw new IllegalArgumentException("Nome inválido");
+            throw new IllegalArgumentException("O nome não pode ser vazio ou nulo.");
         }
 
-        nome = primeiraLetraMaiuscula(nome);
-
-        char primeiraLetra = nome.charAt(0);
-        int index = primeiraLetra - 'A';
-
-        if (index < 0 || index >= 26) {
-            throw new IllegalArgumentException("A primeira letra não está no alfabeto");
-        }
-
-        for (int j = 0; j < indexVetor[index].length && indexVetor[index][j] != null; j++) {
-            if (indexVetor[index][j].nome.equals(nome)) {
-                return j;
-            }
-        }
-
-        throw new IllegalArgumentException("Nome não encontrado: " + nome);
+        return nome.substring(0, 1).toUpperCase() + nome.substring(1);
     }
 
+    public static String[][] getVetorDeArrays() {
+        return vetorDeArrays;
+    }
 }
